@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Drug Green — Synthèse & Cartographie</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <style>
+    :root {
+      --green-900: #0b3d2e;
+      --green-700: #117a4b;
+      --green-500: #1db954;
+      --green-300: #8fe8a4;
+      --bg: #f6fff8;
+      --muted: #5b5b5b;
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, 'Segoe UI', Roboto, Arial;
+      background: linear-gradient(180deg, var(--bg), #f0fff4);
+      color: #053924;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    header {
+      background: white;
+      padding: 14px 18px;
+      border-radius: 12px;
+      box-shadow: 0 6px 18px rgba(6,78,59,0.08);
+      border-left: 6px solid var(--green-500);
+    }
+    header h1 { margin: 0; font-size: 1.6rem; }
+    header p { margin: 4px 0 0; color: var(--muted); font-size: 0.95rem; }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 6px 18px rgba(6,78,59,0.06);
+      border: 1px solid rgba(17,122,75,0.06);
+    }
+    label { font-weight: 600; display: block; margin-bottom: 8px; }
+    textarea {
+      width: 100%;
+      height: 500px;
+      border-radius: 8px;
+      border: 1px solid #e6f6ea;
+      padding: 12px;
+      resize: vertical;
+      line-height: 1.5;
+      font-size: 0.95rem;
+      white-space: pre-wrap;
+    }
+    .meta { font-size: 0.9rem; color: var(--muted); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      background: var(--green-700);
+      color: white;
+      transition: 0.2s ease-in-out;
+    }
+    .btn:hover { background: var(--green-900); }
+    .btn.ghost {
+      background: transparent;
+      color: var(--green-700);
+      border: 1px solid var(--green-300);
+    }
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    #map {
+      width: 100%;
+      height: 400px;
+      border-radius: 12px;
+    }
+    footer {
+      text-align: center;
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-top: 20px;
+    }
+    footer strong {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--green-700);
+      font-size: 1.05rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Drug Green</h1>
+      <p>Synthèse & Cartographie</p>
+    </header>
+
+    <!-- Synthèse -->
+    <div class="card">
+      <label for="synthesisText">Synthèse</label>
+      <textarea id="synthesisText">
+Aujourd’hui, plusieurs pays dans le monde sont confrontés au débat de légalisation du cannabis. 
+C’est un débat qui comprend plusieurs points de vue : certains sont pour et considèrent cela comme un progrès, d’autres refusent complètement car ils y voient un danger pour la société.
+
+Les controverses principales concernent :
+1. *La santé morale* : certains estiment que la légalisation accroît les risques de schizophrénie ou de troubles psychotiques. L’usage fréquent peut aggraver anxiété et dépression, et sur le long terme, nuire à la mémoire et à la motivation. Mais des effets positifs existent aussi : le THC procure une sensation de bien-être, stimule l’appétit et peut être utilisé en médecine.
+2. *La santé physique* : des risques comme une baisse de la tension, une accélération du rythme cardiaque ou des maux de tête sont évoqués. Cependant, le cannabis peut aussi soulager la douleur et améliorer le sommeil.
+3. *Le marché noir* : un marché illégal expose les jeunes à des produits coupés avec des substances chimiques dangereuses et alimente la criminalité. La légalisation permettrait de réguler ce marché et de réduire ces dangers.
+4. *La justice* : la légalisation ne supprime pas totalement les risques judiciaires (ex. accidents de la route). Mais elle pourrait réduire la surcharge des tribunaux si le marché noir est contrôlé.
+5. *L’écologie* : la culture du cannabis nécessite beaucoup d’eau, de lumière et d’énergie, ce qui pèse sur l’environnement. Toutefois, le chanvre peut améliorer les sols pauvres grâce à ses racines profondes.
+
+En conclusion, la légalisation du cannabis soulève des controverses autour de cinq axes : santé morale, santé physique, marché noir, justice et écologie. Les opinions divergent fortement, entre ceux qui y voient un atout et ceux qui la perçoivent comme une menace pour la société.
+      </textarea>
+      <div class="actions">
+        <div class="meta">Dernière édition : <span id="lastEdited">jamais</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn ghost" onclick="downloadSynthesis()">Télécharger .txt</button>
+          <button class="btn" onclick="copySynthesis()">Copier</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cartographie -->
+    <div class="card">
+      <h3>Cartographie</h3>
+      <p class="meta">Cliquez sur la carte pour ajouter un marqueur.</p>
+      <div id="map"></div>
+    </div>
+
+    <!-- Fondateurs -->
+    <footer class="card">
+      <strong>Fondateurs</strong>
+      Youssef Hassine<br>
+      Aya Rahaoui<br>
+      Widad Boubekri
+    </footer>
+  </div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Synthèse
+    const textarea = document.getElementById('synthesisText');
+    const lastEdited = document.getElementById('lastEdited');
+    textarea.addEventListener('input', () => {
+      lastEdited.textContent = new Date().toLocaleString();
+    });
+
+    function downloadSynthesis(){
+      const blob = new Blob([textarea.value], {type:'text/plain;charset=utf-8'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'synthese.txt';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    }
+    function copySynthesis(){
+      navigator.clipboard.writeText(textarea.value).then(()=>{
+        alert('Synthèse copiée !');
+      });
+    }
+
+    // Carte Leaflet
+    const map = L.map('map').setView([34.0209, -6.8416], 6); // Maroc par défaut
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap'
+    }).addTo(map);
+
+    // Ajouter un marqueur au clic
+    map.on('click', function(e) {
+      L.marker([e.latlng.lat, e.latlng.lng])
+        .addTo(map)
+        .bindPopup("Nouveau point ajouté ici")
+        .openPopup();
+    });
+  </script>
+</body>
+</html>
